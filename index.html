@@ -305,12 +305,12 @@ const LOGO_TORNEO = "data:image/webp;base64,UklGRohXAABXRUJQVlA4WAoAAAAQAAAAKwEA
 const TEAMS = {
   shipsharotti:{name:"ShipshaRotti", group:"A", color:"#E23B3B", players:["Ardit Baja","Klevis Baja","Simone La Grotta","Maurizio Feola","Alessandro Rastelli","Giorgio Duci","Mirko Spaccaferro","Lorenzo Spaziani"]},
   mandem:{name:"Mandem F.C.", group:"A", color:"#2E7D4F", players:["Fabio Dellapina","Mirko Moschella","Gabriel Tammaro","Calvin Patricio","Benedict Akindele","Mohamed Beye","Mattia Cini Noya","Akwasi Boateng"]},
-  siammesi:{name:"FC Siammesi", group:"A", color:"#2E5FA3", players:["Matteo Usai","Matteo Verduri","Giovanni Bolognesi","Luca Bolognesi","Lorenzo Medici","Pietro Bizzarri","Davide Di Michele","Alex Romano","Diego De Montis"]},
+  siammesi:{name:"FC Siammessi", group:"A", color:"#2E5FA3", players:["Matteo Usai","Matteo Verduri","Giovanni Bolognesi","Luca Bolognesi","Lorenzo Medici","Pietro Bizzarri","Davide Di Michele","Alex Romano","Diego De Montis"]},
   borrachos:{name:"Los Borrachos", group:"A", color:"#C9A227", players:["Simone Scaltriti","Alessio Todaro","Daniele Scalabrini","Andrea Ruozzi","Federico Farina","Davide Sermolino","Marco Mantovani","Nicolo Simonazzi","Emanuele Rabbito"]},
-  partitella:{name:"Quelli della Partitella", group:"A", color:"#D97728", players:["Gianluca Orlandini","Mattia Magnani","Emanuele Iemmi","Andrea Spina","Valerio Aguzzoli","Manuel Agolini","Emanuele Castagnetti"]},
+  partitella:{name:"Quelli della Partitella", group:"A", color:"#D97728", players:["Gianluca Orlandini","Mattia Magnani","Emanuele Iemmi","Andrea Spina","Valerio Aguzzoli","Cristiano Tamagni","Alessandro Spina"]},
   mohamer:{name:"Figli di Mohamer", group:"A", color:"#3D8B4C", players:["Marco Mirabella","Filippo Roda","Matteo Giambitti","Michele Colli","Samuel Iemmi","Niccolò Catania","Andrea Bigliardi","Abdellah Idrissi Mafthou"]},
   newteam:{name:"New Team", group:"B", color:"#C9A227", players:["Mattia Belvedere","Francesco Cuomo","Alessandro Battisacchi","Giovanni Peluso","Daniele Sacchetto","Andrea Morini","Vincenzo Panariello","Alessandro Silipo","Mattia Ascenso"]},
-  footbrawl:{name:"Xmas FootBrawl", group:"B", color:"#C0392B", players:["Mattia Malangone","Mattia Cottafavi","Matteo Lovascio","Angelo Calabrese","Achille Iodetti","Simone Artoni","Filippo Simonazzi","Andrea Simonazzi"]},
+  footbrawl:{name:"Xmas FootBrawl", group:"B", color:"#C0392B", players:["Mattia Malangone","Mattia Cottafavi","Matteo Lovascio","Angelo Calabrese","Simone Artoni","Filippo Simonazzi","Andrea Simonazzi"]},
   mcfratm:{name:"MCFRATM", group:"B", color:"#2E4E9C", players:["Aldo Abruzzese","Mattia Malagoli","Riccardo Viscomi","Alessandro Caccavale","Diego Morra","Pasquale Abruzzese"]},
   cutservice:{name:"Cut Service", group:"B", color:"#2E6FB0", players:["Michele Icolari","Federico Reggiani","Drissou Yara","Nuofou Bance","Ousseynou Beye","Manuel Matera","Bambore Oumarou","Bambore Tidiane","Simone Calcagno","Toumany Tamba"]},
   perif:{name:"S.S. Perif", group:"B", color:"#3D9150", players:["Amed Niang","Simoni Samuele","Lucibello Alessandro","Montepietra Luca","Cavaliere Francesco","Leo Philip","Sejla Klevis","Papa Alessandro","Cavaliere Mario","Giusti Francesco"]},
@@ -878,14 +878,16 @@ function wireAdmin(){
     await saveState(); render();
   };
   const endMatch = document.getElementById("endMatch");
-  if(endMatch) endMatch.onclick = async () => {
-    const s = score(id);
-    if(s.a === s.b && def.phase !== "girone"){
-      openWinnerModal(id);
-      return;
-    }
-    rt.status = "finished"; rt.timerRunning = false;
-    await saveState(); render();
+  if(endMatch) endMatch.onclick = () => {
+    openConfirmModal(`Terminare ${teamLabel(id,'A')} vs ${teamLabel(id,'B')} (${score(id).a} - ${score(id).b})? Non potrai più segnare gol dopo, a meno di riaprirla.`, async () => {
+      const s = score(id);
+      if(s.a === s.b && def.phase !== "girone"){
+        openWinnerModal(id);
+        return;
+      }
+      rt.status = "finished"; rt.timerRunning = false;
+      await saveState(); render();
+    });
   };
   const reopenMatch = document.getElementById("reopenMatch");
   if(reopenMatch) reopenMatch.onclick = async () => {
@@ -934,6 +936,22 @@ function openGoalModal(matchId, side){
     back.remove();
     await saveState(); render();
   };
+}
+
+function openConfirmModal(message, onConfirm){
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.innerHTML = `<div class="modal">
+    <h4>Conferma</h4>
+    <div class="warn-box">${message}</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn ghost" id="cancelConfirm" style="flex:1;">Annulla</button>
+      <button class="btn danger" id="okConfirm" style="flex:1;">Conferma</button>
+    </div>
+  </div>`;
+  document.body.appendChild(back);
+  document.getElementById("cancelConfirm").onclick = () => back.remove();
+  document.getElementById("okConfirm").onclick = () => { back.remove(); onConfirm(); };
 }
 
 function openWinnerModal(matchId){
